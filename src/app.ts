@@ -65,6 +65,19 @@ export const createApp = async () => {
     await app.register(userRoutes, { prefix: `/api/${env.API_VERSION}/users` });
     await app.register(ledgerRoutes, { prefix: `/api/${env.API_VERSION}/ledger` });
 
+    // Import and register new routes
+    const { customersRoutes } = await import('@modules/customers/customers.routes.js');
+    const { invoicesRoutes } = await import('@modules/invoices/invoices.routes.js');
+    const { productsRoutes } = await import('@modules/products/products.routes.js');
+    const { paymentsRoutes } = await import('@modules/payments/payments.routes.js');
+    const { organizationsRoutes } = await import('@modules/organizations/organizations.routes.js');
+
+    await app.register(customersRoutes, { prefix: `/api/${env.API_VERSION}/customers` });
+    await app.register(invoicesRoutes, { prefix: `/api/${env.API_VERSION}/invoices` });
+    await app.register(productsRoutes, { prefix: `/api/${env.API_VERSION}/products` });
+    await app.register(paymentsRoutes, { prefix: `/api/${env.API_VERSION}/payments` });
+    await app.register(organizationsRoutes, { prefix: `/api/${env.API_VERSION}/organizations` });
+
     // 404 handler
     app.setNotFoundHandler((request, reply) => {
         reply.status(404).send({

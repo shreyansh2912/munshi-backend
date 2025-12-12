@@ -4,48 +4,7 @@
  */
 
 import { FastifyReply } from 'fastify';
-
-/**
- * Success response structure
- */
-export interface SuccessResponse<T = unknown> {
-    success: true;
-    statusCode: number;
-    message: string;
-    data: T;
-    timestamp: string;
-}
-
-/**
- * Error response structure
- */
-export interface ErrorResponse {
-    success: false;
-    statusCode: number;
-    message: string;
-    errorCode: string;
-    details?: unknown;
-    timestamp: string;
-}
-
-/**
- * Success response options
- */
-interface SuccessOptions<T = unknown> {
-    statusCode?: number;
-    message?: string;
-    data?: T;
-}
-
-/**
- * Error response options
- */
-interface ErrorOptions {
-    statusCode: number;
-    message: string;
-    errorCode: string;
-    details?: unknown;
-}
+import type { SuccessResponse, ErrorResponse, SuccessOptions, ErrorOptions } from '../types';
 
 /**
  * Send a standardized success response
@@ -105,7 +64,7 @@ export const errorJson = (reply: FastifyReply, options: ErrorOptions): FastifyRe
         statusCode,
         message,
         errorCode,
-        ...(details && { details }),
+        ...(details && typeof details === 'object' && details !== null ? { details } : {}),
         timestamp: new Date().toISOString(),
     };
 

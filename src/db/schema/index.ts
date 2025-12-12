@@ -3,12 +3,23 @@
  * Aggregates all schema tables for Drizzle ORM
  */
 
-// Core tables
-export * from './core.js';
+// Core tables (4 tables)
+export * from './core';
 
-// TODO: Add more schema files as we convert them
-// export * from './accounting.js';
-// export * from './invoicing.js';
-// export * from './inventory.js';
-// export * from './banking.js';
-// export * from './gst.js';
+// Accounting tables (5 tables)
+export * from './accounting';
+
+// Party tables (2 tables)
+export * from './parties';
+
+// Invoice tables (3 tables)
+export * from './invoicing';
+
+// Inventory tables (9 tables)
+export * from './inventory';
+
+// Operations tables (14 tables)
+export * from './operations';
+
+// Materialized views (5 tables)
+export * from './reports';

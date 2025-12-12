@@ -34,8 +34,8 @@ export const users = mysqlTable(
         emailVerified: boolean('email_verified').default(false),
         phoneVerified: boolean('phone_verified').default(false),
         lastLoginAt: datetime('last_login_at', { mode: 'date', fsp: 6 }),
-        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().defaultNow(),
-        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().defaultNow().$onUpdate(() => new Date()),
+        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
+        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
         deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
     },
     (table) => ({
@@ -85,8 +85,8 @@ export const organizations = mysqlTable(
         subscriptionStatus: mysqlEnum('subscription_status', ['trial', 'active', 'suspended', 'cancelled']).default('trial'),
         trialEndsAt: datetime('trial_ends_at', { mode: 'date', fsp: 6 }),
         createdBy: bigint('created_by', { mode: 'number' }).notNull(),
-        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().defaultNow(),
-        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().defaultNow().$onUpdate(() => new Date()),
+        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
+        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
         deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
     },
     (table) => ({
@@ -110,8 +110,8 @@ export const roles = mysqlTable(
         description: text('description'),
         isSystem: boolean('is_system').default(false),
         permissions: json('permissions').$type<string[]>(),
-        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().defaultNow(),
-        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().defaultNow().$onUpdate(() => new Date()),
+        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
+        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
     },
     (table) => ({
         orgIdIdx: index('idx_org_id').on(table.orgId),
@@ -135,8 +135,8 @@ export const memberships = mysqlTable(
         inviteSentAt: datetime('invite_sent_at', { mode: 'date', fsp: 6 }),
         inviteExpiresAt: datetime('invite_expires_at', { mode: 'date', fsp: 6 }),
         lastActiveAt: datetime('last_active_at', { mode: 'date', fsp: 6 }),
-        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().defaultNow(),
-        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().defaultNow().$onUpdate(() => new Date()),
+        createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
+        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
     },
     (table) => ({
         uniqueUserOrg: uniqueIndex('unique_user_org').on(table.userId, table.orgId),
