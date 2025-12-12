@@ -63,7 +63,7 @@ export const invoices = mysqlTable(
         termsAndConditions: text('terms_and_conditions'),
         journalEntryId: bigint('journal_entry_id', { mode: 'number' }),
         version: int('version').default(0),
-        createdBy: bigint('created_by', { mode: 'number' }).notNull(),
+        createdBy: char('created_by', { length: 36 }).notNull(),
         sentAt: datetime('sent_at', { mode: 'date', fsp: 6 }),
         paidAt: datetime('paid_at', { mode: 'date', fsp: 6 }),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),

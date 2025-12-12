@@ -6,8 +6,8 @@ import { db } from '@db/mysql/client.js';
 import { invoices } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { NotFoundError } from '@utils/errors.js';
 import type { CreateInvoiceInput, UpdateInvoiceInput } from './invoices.validation.js';
+import { NotFoundError } from '@helpers/errors.js';
 
 export const createInvoice = async (orgId: number, userId: number, data: CreateInvoiceInput) => {
     const [invoice] = await db

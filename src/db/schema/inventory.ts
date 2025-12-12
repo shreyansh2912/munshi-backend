@@ -220,7 +220,7 @@ export const stockMovements = mysqlTable(
         referenceId: char('reference_id', { length: 36 }),
         referenceNumber: varchar('reference_number', { length: 100 }),
         notes: text('notes'),
-        createdBy: bigint('created_by', { mode: 'number' }).notNull(),
+        createdBy: char('created_by', { length: 36 }).notNull(),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
     },
     (table) => ({

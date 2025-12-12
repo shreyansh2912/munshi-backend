@@ -13,6 +13,7 @@ import {
 import { validate } from '@middlewares/validate.js';
 import { authenticate } from '@middlewares/auth.js';
 import { createCustomerSchema, updateCustomerSchema } from './customers.validation.js';
+import type { CreateCustomerInput, UpdateCustomerInput } from './customers.validation.js';
 
 export const customersRoutes = async (fastify: FastifyInstance): Promise<void> => {
     // All routes require authentication
@@ -22,7 +23,7 @@ export const customersRoutes = async (fastify: FastifyInstance): Promise<void> =
     fastify.get('/', listCustomersHandler);
 
     // Create customer
-    fastify.post(
+    fastify.post<{ Body: CreateCustomerInput }>(
         '/',
         {
             preHandler: [validate({ body: createCustomerSchema })],
@@ -34,7 +35,7 @@ export const customersRoutes = async (fastify: FastifyInstance): Promise<void> =
     fastify.get('/:id', getCustomerHandler);
 
     // Update customer
-    fastify.patch(
+    fastify.patch<{ Params: { id: string }; Body: UpdateCustomerInput }>(
         '/:id',
         {
             preHandler: [validate({ body: updateCustomerSchema })],

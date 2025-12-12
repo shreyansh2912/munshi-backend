@@ -6,7 +6,9 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 import { verifyAccessToken } from '@utils/crypto.js';
-import { prisma } from '@db/mysql/client.js';
+import { db } from '@db/mysql/client.js';
+import { users } from '@db/schema';
+import { eq } from 'drizzle-orm';
 import { AuthenticationError, ErrorCode } from '@helpers/errors.js';
 import { logger } from '@config/logger.js';
 
@@ -57,9 +59,8 @@ export const authenticate = async (
         }
 
         // Fetch user from database
-        const user = await prisma.user.findUnique({
-            where: { id: payload.userId },
-        });
+        const result = await db.select().from(users).where(eq(users.id, payload.userId));
+        const user = result[0] || null;
 
         if (!user) {
             throw new AuthenticationError('User not found', ErrorCode.USER_NOT_FOUND);
@@ -101,9 +102,8 @@ export const optionalAuthenticate = async (
         }
 
         const payload = verifyAccessToken(token);
-        const user = await prisma.user.findUnique({
-            where: { id: payload.userId },
-        });
+        const result = await db.select().from(users).where(eq(users.id, payload.userId));
+        const user = result[0] || null;
 
         if (user && user.isActive) {
             request.user = user;

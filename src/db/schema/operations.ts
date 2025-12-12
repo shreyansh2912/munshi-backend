@@ -54,7 +54,7 @@ export const payments = mysqlTable(
         status: mysqlEnum('status', ['pending', 'cleared', 'bounced', 'cancelled']).default('cleared'),
         clearedAt: datetime('cleared_at', { mode: 'date', fsp: 6 }),
         journalEntryId: bigint('journal_entry_id', { mode: 'number' }),
-        createdBy: bigint('created_by', { mode: 'number' }).notNull(),
+        createdBy: char('created_by', { length: 36 }).notNull(),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
         updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
         deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
@@ -109,7 +109,7 @@ export const purchaseOrders = mysqlTable(
         status: mysqlEnum('status', ['draft', 'sent', 'confirmed', 'partially_received', 'received', 'cancelled']).default('draft'),
         notes: text('notes'),
         termsAndConditions: text('terms_and_conditions'),
-        createdBy: bigint('created_by', { mode: 'number' }).notNull(),
+        createdBy: char('created_by', { length: 36 }).notNull(),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
         updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
         deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
@@ -173,7 +173,7 @@ export const purchaseBills = mysqlTable(
         status: mysqlEnum('status', ['draft', 'posted', 'partially_paid', 'paid', 'cancelled']).default('draft'),
         paymentStatus: mysqlEnum('payment_status', ['unpaid', 'partially_paid', 'paid']).default('unpaid'),
         journalEntryId: bigint('journal_entry_id', { mode: 'number' }),
-        createdBy: bigint('created_by', { mode: 'number' }).notNull(),
+        createdBy: char('created_by', { length: 36 }).notNull(),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
         updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
         deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
@@ -249,7 +249,7 @@ export const bankTransactions = mysqlTable(
         reconciledWithType: varchar('reconciled_with_type', { length: 50 }),
         reconciledWithId: char('reconciled_with_id', { length: 36 }),
         reconciledAt: datetime('reconciled_at', { mode: 'date', fsp: 6 }),
-        reconciledBy: bigint('reconciled_by', { mode: 'number' }),
+        reconciledBy: char('reconciled_by', { length: 36 }),
         notes: text('notes'),
         rawDataId: char('raw_data_id', { length: 36 }),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
@@ -278,7 +278,7 @@ export const gstReturnPeriods = mysqlTable(
         filingDueDate: date('filing_due_date', { mode: 'date' }).notNull(),
         status: mysqlEnum('status', ['not_started', 'in_progress', 'ready', 'filed', 'late_filed']).default('not_started'),
         filedAt: datetime('filed_at', { mode: 'date', fsp: 6 }),
-        filedBy: bigint('filed_by', { mode: 'number' }),
+        filedBy: char('filed_by', { length: 36 }),
         acknowledgementNumber: varchar('acknowledgement_number', { length: 100 }),
         arn: varchar('arn', { length: 100 }),
         returnData: json('return_data'),
@@ -327,14 +327,14 @@ export const gstSummary = mysqlTable(
 );
 
 /**
- * Audit Logs table
+ * Organization Audit Logs table (org-specific events)
  */
-export const auditLogs = mysqlTable(
-    'audit_logs',
+export const orgAuditLogs = mysqlTable(
+    'org_audit_logs',
     {
         id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
         orgId: bigint('org_id', { mode: 'number' }).notNull(),
-        userId: bigint('user_id', { mode: 'number' }),
+        userId: char('user_id', { length: 36 }),
         action: varchar('action', { length: 100 }).notNull(),
         entityType: varchar('entity_type', { length: 100 }).notNull(),
         entityId: char('entity_id', { length: 36 }).notNull(),
@@ -382,7 +382,7 @@ export const notifications = mysqlTable(
     {
         id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
         orgId: bigint('org_id', { mode: 'number' }).notNull(),
-        userId: bigint('user_id', { mode: 'number' }).notNull(),
+        userId: char('user_id', { length: 36 }).notNull(),
         notificationType: varchar('notification_type', { length: 50 }).notNull(),
         title: varchar('title', { length: 255 }).notNull(),
         message: text('message'),

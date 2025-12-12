@@ -22,6 +22,11 @@ const envSchema = z.object({
 
     // Database - MySQL
     DATABASE_URL: z.string().url(),
+    DB_HOST: z.string().default('localhost'),
+    DB_PORT: z.string().transform(Number).pipe(z.number()).default('3306'),
+    DB_USER: z.string().default('root'),
+    DB_PASSWORD: z.string().default(''),
+    DB_NAME: z.string().default('munshi'),
 
     // Database - MongoDB
     MONGODB_URI: z.string().url(),

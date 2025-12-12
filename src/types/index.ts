@@ -95,15 +95,15 @@ export interface RefreshTokenResponse {
 // ============================================================================
 
 export interface User {
-    id: number;
-    uuid: string;
+    id: string;
     email: string;
-    name: string | null;
-    phone: string | null;
-    isSuperAdmin: boolean;
+    password?: string;
+    firstName: string;
+    lastName: string;
+    role: UserRole;
+    isActive: boolean;
+    isMfaEnabled: boolean;
     emailVerified: boolean;
-    phoneVerified: boolean;
-    lastLoginAt: Date | null;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -114,6 +114,46 @@ export interface UpdateProfileRequest {
 }
 
 export type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+
+// ============================================================================
+// Organization Types
+// ============================================================================
+
+export interface DeviceFingerprint {
+    id: string;
+    userId: string;
+    fingerprint: string;
+    userAgent: string;
+    ipAddress: string;
+    lastUsedAt: Date;
+    createdAt: Date;
+}
+
+export interface RefreshToken {
+    id: string;
+    token: string;
+    userId: string;
+    deviceFingerprint: string;
+    expiresAt: Date;
+    createdAt: Date;
+}
+
+export interface UserCreateInput {
+    email: string;
+    password?: string;
+    firstName?: string;
+    lastName?: string;
+    role?: UserRole;
+    [key: string]: any;
+}
+
+export interface RefreshTokenCreateInput {
+    token: string;
+    userId: string;
+    deviceFingerprint: string;
+    expiresAt: Date;
+    [key: string]: any;
+}
 
 // ============================================================================
 // Organization Types

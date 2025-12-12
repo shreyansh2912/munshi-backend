@@ -6,6 +6,9 @@
 // Core tables (4 tables)
 export * from './core';
 
+// Auth tables (3 tables)
+export * from './auth';
+
 // Accounting tables (5 tables)
 export * from './accounting';
 

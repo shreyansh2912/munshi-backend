@@ -12,7 +12,7 @@ import { env } from './env.js';
  * Development: Pretty-printed logs
  * Production: JSON logs for structured logging
  */
-export const logger = pino({
+export const loggerOptions = {
     level: env.LOG_LEVEL,
     ...(env.NODE_ENV === 'development'
         ? {
@@ -27,7 +27,7 @@ export const logger = pino({
         }
         : {}),
     formatters: {
-        level: (label) => {
+        level: (label: string) => {
             return { level: label };
         },
     },
@@ -36,7 +36,9 @@ export const logger = pino({
         env: env.NODE_ENV,
         app: env.APP_NAME,
     },
-});
+};
+
+export const logger = pino(loggerOptions);
 
 /**
  * Create child logger with additional context

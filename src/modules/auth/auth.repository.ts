@@ -1,64 +1,114 @@
 /**
  * Auth Module - Repository
- * Database operations for authentication
+ * Database operations for authentication using Drizzle ORM
  */
 
-import { Prisma, User, RefreshToken, DeviceFingerprint } from '@prisma/client';
+import { db } from '@db/mysql/client.js';
+import { users, refreshTokens, deviceFingerprints } from '@db/schema';
+import { eq, and, desc } from 'drizzle-orm';
+import { v4 as uuidv4 } from 'uuid';
 
-import { prisma } from '@db/mysql/client.js';
+/**
+ * Type definitions
+ */
+export interface UserCreateInput {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role?: 'USER' | 'ADMIN' | 'ENTERPRISE_MEMBER';
+}
+
+export interface RefreshTokenCreateInput {
+    token: string;
+    userId: string;
+    deviceFingerprint: string;
+    expiresAt: Date;
+}
 
 /**
  * Create a new user
  */
-export const createUser = async (data: Prisma.UserCreateInput): Promise<User> => {
-    return prisma.user.create({ data });
+export const createUser = async (data: UserCreateInput) => {
+    const userId = uuidv4();
+    await db.insert(users).values({
+        id: userId,
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role || 'USER',
+        isActive: true,
+        isMfaEnabled: false,
+        emailVerified: false,
+    });
+
+    // Return the created user
+    return db.select().from(users).where(eq(users.id, userId)).then(rows => rows[0]);
 };
 
 /**
  * Find user by email
  */
-export const findUserByEmail = async (email: string): Promise<User | null> => {
-    return prisma.user.findUnique({ where: { email } });
+export const findUserByEmail = async (email: string) => {
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result[0] || null;
 };
 
 /**
  * Find user by ID
  */
-export const findUserById = async (id: string): Promise<User | null> => {
-    return prisma.user.findUnique({ where: { id } });
+export const findUserById = async (id: string) => {
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0] || null;
 };
 
 /**
  * Create refresh token
  */
-export const createRefreshToken = async (
-    data: Prisma.RefreshTokenCreateInput
-): Promise<RefreshToken> => {
-    return prisma.refreshToken.create({ data });
+export const createRefreshToken = async (data: RefreshTokenCreateInput) => {
+    const tokenId = uuidv4();
+    await db.insert(refreshTokens).values({
+        id: tokenId,
+        token: data.token,
+        userId: data.userId,
+        deviceFingerprint: data.deviceFingerprint,
+        expiresAt: data.expiresAt,
+    });
+
+    return db.select().from(refreshTokens).where(eq(refreshTokens.id, tokenId)).then(rows => rows[0]);
 };
 
 /**
  * Find refresh token
  */
-export const findRefreshToken = async (token: string): Promise<RefreshToken | null> => {
-    return prisma.refreshToken.findUnique({
-        where: { token },
-        include: { user: true },
-    });
+export const findRefreshToken = async (token: string) => {
+    const result = await db
+        .select()
+        .from(refreshTokens)
+        .leftJoin(users, eq(refreshTokens.userId, users.id))
+        .where(eq(refreshTokens.token, token));
+
+    if (!result[0]) return null;
+
+    return {
+        ...result[0].refresh_tokens,
+        user: result[0].users,
+    };
 };
 
 /**
  * Delete refresh token
  */
 export const deleteRefreshToken = async (token: string): Promise<void> => {
-    await prisma.refreshToken.delete({ where: { token } });
+    await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
 };
 
 /**
  * Delete all refresh tokens for a user
  */
 export const deleteUserRefreshTokens = async (userId: string): Promise<void> => {
-    await prisma.refreshToken.deleteMany({ where: { userId } });
+    await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
 };
 
 /**
@@ -69,39 +119,68 @@ export const upsertDeviceFingerprint = async (
     fingerprint: string,
     userAgent: string,
     ipAddress: string
-): Promise<DeviceFingerprint> => {
-    return prisma.deviceFingerprint.upsert({
-        where: {
-            userId_fingerprint: {
-                userId,
-                fingerprint,
-            },
-        },
-        create: {
+) => {
+    // Check if exists
+    const existing = await db
+        .select()
+        .from(deviceFingerprints)
+        .where(and(
+            eq(deviceFingerprints.userId, userId),
+            eq(deviceFingerprints.fingerprint, fingerprint)
+        ));
+
+    if (existing[0]) {
+        // Update
+        await db
+            .update(deviceFingerprints)
+            .set({
+                userAgent,
+                ipAddress,
+                lastUsedAt: new Date(),
+            })
+            .where(and(
+                eq(deviceFingerprints.userId, userId),
+                eq(deviceFingerprints.fingerprint, fingerprint)
+            ));
+
+        return db
+            .select()
+            .from(deviceFingerprints)
+            .where(and(
+                eq(deviceFingerprints.userId, userId),
+                eq(deviceFingerprints.fingerprint, fingerprint)
+            ))
+            .then(rows => rows[0]);
+    } else {
+        // Insert
+        await db.insert(deviceFingerprints).values({
             userId,
             fingerprint,
             userAgent,
             ipAddress,
             lastUsedAt: new Date(),
-        },
-        update: {
-            userAgent,
-            ipAddress,
-            lastUsedAt: new Date(),
-        },
-    });
+        });
+
+        return db
+            .select()
+            .from(deviceFingerprints)
+            .where(and(
+                eq(deviceFingerprints.userId, userId),
+                eq(deviceFingerprints.fingerprint, fingerprint)
+            ))
+            .then(rows => rows[0]);
+    }
 };
 
 /**
  * Get user's device fingerprints
  */
-export const getUserDeviceFingerprints = async (
-    userId: string
-): Promise<DeviceFingerprint[]> => {
-    return prisma.deviceFingerprint.findMany({
-        where: { userId },
-        orderBy: { lastUsedAt: 'desc' },
-    });
+export const getUserDeviceFingerprints = async (userId: string) => {
+    return db
+        .select()
+        .from(deviceFingerprints)
+        .where(eq(deviceFingerprints.userId, userId))
+        .orderBy(desc(deviceFingerprints.lastUsedAt));
 };
 
 /**
@@ -114,9 +193,15 @@ export const cleanupOldDeviceFingerprints = async (
     const devices = await getUserDeviceFingerprints(userId);
 
     if (devices.length > keepCount) {
-        const toDelete = devices.slice(keepCount).map((d) => d.id);
-        await prisma.deviceFingerprint.deleteMany({
-            where: { id: { in: toDelete } },
-        });
+        const toDelete = devices.slice(keepCount);
+
+        for (const device of toDelete) {
+            await db
+                .delete(deviceFingerprints)
+                .where(and(
+                    eq(deviceFingerprints.userId, device.userId),
+                    eq(deviceFingerprints.fingerprint, device.fingerprint)
+                ));
+        }
     }
 };

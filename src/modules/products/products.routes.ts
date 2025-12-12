@@ -5,7 +5,7 @@
 import { FastifyInstance } from 'fastify';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '@db/mysql/client.js';
-import { products, productVariants } from '@db/schema';
+import { products, productVariants } from '@db/schema/index.js';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { successJson } from '@helpers/response.js';

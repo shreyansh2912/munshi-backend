@@ -7,8 +7,8 @@ import { db } from '@db/mysql/client.js';
 import { customers } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { NotFoundError } from '@utils/errors.js';
 import type { CreateCustomerInput, UpdateCustomerInput } from './customers.validation.js';
+import { NotFoundError } from '@helpers/errors.js';
 
 /**
  * Create a new customer

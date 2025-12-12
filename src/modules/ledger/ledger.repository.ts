@@ -4,7 +4,7 @@
 
 import { Ledger, Prisma } from '@prisma/client';
 
-import { prisma } from '@db/mysql/client.js';
+import { prisma } from '@db/mysql/prisma-client.js';
 
 /**
  * Create ledger account

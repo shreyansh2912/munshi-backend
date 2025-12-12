@@ -9,8 +9,10 @@ import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 
+import { redis } from '@utils/redis.js';
+
 import { env } from '@config/env.js';
-import { logger } from '@config/logger.js';
+import { logger, loggerOptions } from '@config/logger.js';
 import { corsConfig, helmetConfig } from '@config/security.js';
 import { errorHandler } from '@middlewares/errorHandler.js';
 import { ipLogger } from '@middlewares/ipLogger.js';
@@ -23,7 +25,7 @@ import { ledgerRoutes } from '@modules/ledger/ledger.routes.js';
  */
 export const createApp = async () => {
     const app = Fastify({
-        logger: logger,
+        logger: loggerOptions,
         trustProxy: true,
         bodyLimit: env.MAX_FILE_SIZE,
     });
@@ -41,10 +43,7 @@ export const createApp = async () => {
     await app.register(rateLimit, {
         max: 100,
         timeWindow: '1 minute',
-        redis: {
-            host: env.REDIS_HOST,
-            port: env.REDIS_PORT,
-        },
+        redis: redis,
     });
 
     // Global hooks

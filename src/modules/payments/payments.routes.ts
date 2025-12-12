@@ -5,7 +5,7 @@
 import { FastifyInstance } from 'fastify';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '@db/mysql/client.js';
-import { payments, paymentAllocations } from '@db/schema';
+import { payments, paymentAllocations } from '@db/schema/index.js';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { successJson } from '@helpers/response.js';

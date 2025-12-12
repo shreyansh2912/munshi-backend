@@ -20,28 +20,25 @@ import { relations } from 'drizzle-orm';
 
 /**
  * Users table (global, not tenant-scoped)
+ * Updated to match Prisma schema structure - using UUID primary key
  */
 export const users = mysqlTable(
     'users',
     {
-        id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-        uuid: char('uuid', { length: 36 }).notNull().unique(),
+        id: char('id', { length: 36 }).primaryKey(), // UUID
         email: varchar('email', { length: 255 }).notNull().unique(),
-        phone: varchar('phone', { length: 32 }),
-        passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-        name: varchar('name', { length: 200 }),
-        isSuperAdmin: boolean('is_super_admin').default(false),
+        password: varchar('password', { length: 255 }).notNull(),
+        firstName: varchar('first_name', { length: 50 }).notNull(),
+        lastName: varchar('last_name', { length: 50 }).notNull(),
+        role: mysqlEnum('role', ['USER', 'ADMIN', 'ENTERPRISE_MEMBER']).default('USER'),
+        isActive: boolean('is_active').default(true),
+        isMfaEnabled: boolean('is_mfa_enabled').default(false),
         emailVerified: boolean('email_verified').default(false),
-        phoneVerified: boolean('phone_verified').default(false),
-        lastLoginAt: datetime('last_login_at', { mode: 'date', fsp: 6 }),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
-        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
-        deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
+        updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
     },
     (table) => ({
         emailIdx: index('idx_email').on(table.email),
-        uuidIdx: index('idx_uuid').on(table.uuid),
-        deletedAtIdx: index('idx_deleted_at').on(table.deletedAt),
     })
 );
 
@@ -84,7 +81,7 @@ export const organizations = mysqlTable(
         subscriptionPlan: varchar('subscription_plan', { length: 50 }).default('free'),
         subscriptionStatus: mysqlEnum('subscription_status', ['trial', 'active', 'suspended', 'cancelled']).default('trial'),
         trialEndsAt: datetime('trial_ends_at', { mode: 'date', fsp: 6 }),
-        createdBy: bigint('created_by', { mode: 'number' }).notNull(),
+        createdBy: char('created_by', { length: 36 }).notNull(),
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
         updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
         deletedAt: datetime('deleted_at', { mode: 'date', fsp: 6 }),
@@ -126,7 +123,7 @@ export const memberships = mysqlTable(
     'memberships',
     {
         id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-        userId: bigint('user_id', { mode: 'number' }).notNull(),
+        userId: char('user_id', { length: 36 }).notNull(),
         orgId: bigint('org_id', { mode: 'number' }).notNull(),
         roleId: bigint('role_id', { mode: 'number' }).notNull(),
         status: mysqlEnum('status', ['active', 'invited', 'suspended', 'left']).default('invited'),

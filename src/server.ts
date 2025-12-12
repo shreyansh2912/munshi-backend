@@ -11,6 +11,8 @@ import { connectMongoDB, disconnectMongoDB } from '@db/mongo/client.js';
 import { closeRedis } from '@utils/redis.js';
 import { closeQueues } from '@queue/client.js';
 
+import fs from 'fs';
+
 /**
  * Start the server
  */
@@ -21,6 +23,8 @@ const start = async () => {
         await Promise.all([connectMySQL(), connectMongoDB()]);
 
         // Create Fastify app
+        console.log('Logger type:', typeof logger);
+        console.log('Logger keys:', Object.keys(logger));
         const app = await createApp();
 
         // Start server
@@ -37,7 +41,13 @@ const start = async () => {
             },
             'Server started successfully'
         );
-    } catch (error) {
+    } catch (error: any) {
+        console.error('Raw startup error:', error);
+        try {
+            fs.appendFileSync('startup_error.log', 'Startup error: ' + (error.stack || error.message || error) + '\n');
+        } catch (e) {
+            console.error('Failed to write log:', e);
+        }
         logger.error({ error }, 'Failed to start server');
         process.exit(1);
     }
