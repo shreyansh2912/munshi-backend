@@ -4,7 +4,7 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../types/prisma.js';
 
 import { AuthorizationError } from '@helpers/errors.js';
 import { logger } from '@config/logger.js';

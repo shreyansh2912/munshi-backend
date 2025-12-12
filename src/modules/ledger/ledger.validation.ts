@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { AccountType } from '@prisma/client';
+import { AccountType } from '../../types/prisma.js';
 
 /**
  * Create ledger account schema
