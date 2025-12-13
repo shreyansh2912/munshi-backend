@@ -36,9 +36,47 @@ export const authenticate = async (
         // Extract token from header or cookie
         let token = extractToken(request.headers.authorization);
 
+        // Debug logging
+        const debugInfo = {
+            hasCookies: !!request.cookies,
+            cookieKeys: request.cookies ? Object.keys(request.cookies) : [],
+            hasCookieHeader: !!request.headers.cookie,
+            cookieHeaderLength: request.headers.cookie?.toString().length || 0,
+            url: request.url,
+        };
+
+        console.log('[AUTH DEBUG] Authentication attempt:', debugInfo);
+        logger.debug(debugInfo, 'Authentication: Cookie debug info');
+
+        // Try to get token from signed cookies first (from browser)
         if (!token && request.cookies['munshi_access_token']) {
             token = request.cookies['munshi_access_token'];
+            console.log('[AUTH DEBUG] Found token in signed cookies');
         }
+
+        // If not found, try to parse unsigned cookies (from Next.js SSR)
+        if (!token && request.headers.cookie) {
+            const cookieHeader = request.headers.cookie.toString();
+            console.log('[AUTH DEBUG] Cookie header:', cookieHeader.substring(0, 100));
+
+            const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+                const [name, value] = cookie.trim().split('=');
+                if (name && value) {
+                    acc[name] = value;
+                }
+                return acc;
+            }, {} as Record<string, string>);
+
+            console.log('[AUTH DEBUG] Parsed cookies:', Object.keys(cookies));
+
+            if (cookies['munshi_access_token']) {
+                token = cookies['munshi_access_token'];
+                console.log('[AUTH DEBUG] Found token in unsigned cookies (SSR)');
+                logger.debug('Using unsigned cookie from SSR request');
+            }
+        }
+
+        console.log('[AUTH DEBUG] Final token status:', !!token);
 
         if (!token) {
             throw new AuthenticationError('Access token is required', ErrorCode.UNAUTHORIZED);
@@ -113,8 +151,25 @@ export const optionalAuthenticate = async (
     try {
         let token = extractToken(request.headers.authorization);
 
+        // Try signed cookies first
         if (!token && request.cookies['munshi_access_token']) {
             token = request.cookies['munshi_access_token'];
+        }
+
+        // Try unsigned cookies (from SSR)
+        if (!token && request.headers.cookie) {
+            const cookieHeader = request.headers.cookie.toString();
+            const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+                const [name, value] = cookie.trim().split('=');
+                if (name && value) {
+                    acc[name] = value;
+                }
+                return acc;
+            }, {} as Record<string, string>);
+
+            if (cookies['munshi_access_token']) {
+                token = cookies['munshi_access_token'];
+            }
         }
 
         if (!token) {
