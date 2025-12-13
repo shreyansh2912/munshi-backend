@@ -19,6 +19,7 @@ import {
     smallint,
     index,
     uniqueIndex,
+    decimal,
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 import { organizations, users } from './core';
@@ -249,5 +250,45 @@ export const accountBalancesRelations = relations(accountBalances, ({ one }) => 
     account: one(accounts, {
         fields: [accountBalances.accountId],
         references: [accounts.id],
+    }),
+}));
+
+/**
+ * Legacy Ledgers table (from Prisma schema)
+ */
+export const ledgers = mysqlTable(
+    'ledgers',
+    {
+        id: char('id', { length: 36 }).primaryKey(),
+        userId: char('userId', { length: 36 }).notNull(),
+        accountCode: varchar('accountCode', { length: 255 }).notNull(),
+        accountName: varchar('accountName', { length: 255 }).notNull(),
+        accountType: mysqlEnum('accountType', ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE']).notNull(),
+        parentId: char('parentId', { length: 36 }),
+        balance: decimal('balance', { precision: 15, scale: 2 }).default('0'),
+        isActive: boolean('isActive').default(true),
+        description: text('description'),
+        createdAt: datetime('createdAt', { mode: 'date', fsp: 3 }).notNull().$defaultFn(() => new Date()),
+        updatedAt: datetime('updatedAt', { mode: 'date', fsp: 3 }).notNull().$defaultFn(() => new Date()).$onUpdate(() => new Date()),
+    },
+    (table) => ({
+        uniqueUserAccount: uniqueIndex('unique_user_account').on(table.userId, table.accountCode),
+        userIdIdx: index('idx_userId').on(table.userId),
+        accountTypeIdx: index('idx_accountType').on(table.accountType),
+    })
+);
+
+export const ledgersRelations = relations(ledgers, ({ one, many }) => ({
+    user: one(users, {
+        fields: [ledgers.userId],
+        references: [users.id],
+    }),
+    parent: one(ledgers, {
+        fields: [ledgers.parentId],
+        references: [ledgers.id],
+        relationName: 'LedgerHierarchy',
+    }),
+    children: many(ledgers, {
+        relationName: 'LedgerHierarchy',
     }),
 }));

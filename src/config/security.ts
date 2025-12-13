@@ -53,10 +53,18 @@ export const rateLimitConfig = {
  * CORS Configuration
  */
 export const corsConfig = {
-    origin: env.CORS_ORIGIN.split(',').map((origin) => origin.trim()),
+    origin: [
+        env.CORS_ORIGIN,
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001',
+        'http://172.26.192.1:3000',
+        'http://172.26.192.1:3001'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Fingerprint', 'X-CSRF-Token'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Device-Fingerprint', 'X-CSRF-Token', 'X-Device-ID', 'X-Request-Time', 'skip-auth'],
     exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Per-Page'],
     maxAge: 86400, // 24 hours
 } as const;

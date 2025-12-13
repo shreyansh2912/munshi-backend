@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod';
-import { AccountType } from '../../types/prisma.js';
+import { ACCOUNT_TYPES } from '../../types';
 
 /**
  * Create ledger account schema
@@ -11,7 +11,7 @@ import { AccountType } from '../../types/prisma.js';
 export const createLedgerSchema = z.object({
     accountCode: z.string().min(1, 'Account code is required').max(20),
     accountName: z.string().min(1, 'Account name is required').max(100),
-    accountType: z.nativeEnum(AccountType),
+    accountType: z.enum(ACCOUNT_TYPES),
     parentId: z.string().uuid().optional(),
     description: z.string().max(500).optional(),
 });

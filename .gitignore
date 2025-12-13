@@ -40,9 +40,6 @@ coverage/
 # Docker
 docker-compose.override.yml
 
-# Prisma
-prisma/migrations/
-
 # Temporary files
 tmp/
 temp/

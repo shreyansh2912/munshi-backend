@@ -7,6 +7,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 
 import * as authService from './auth.service.js';
 import { successJson } from '@helpers/response.js';
+import { env } from '@config/env.js';
 import type { RegisterInput, LoginInput, RefreshTokenInput } from './auth.validation.js';
 
 /**
@@ -22,10 +23,27 @@ export const registerHandler = async (
 
     const result = await authService.register(request.body, userAgent, ipAddress);
 
+    // Set cookies
+    reply.setCookie('munshi_access_token', result.accessToken, {
+        path: '/',
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production', // Allow insecure cookies in development
+        sameSite: 'lax',
+        maxAge: 15 * 60, // 15 minutes
+    });
+
+    reply.setCookie('munshi_refresh_token', result.refreshToken, {
+        path: '/',
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production', // Allow insecure cookies in development
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
     return successJson(reply, {
         statusCode: 201,
         message: 'User registered successfully',
-        data: result,
+        data: result.user,
     });
 };
 
@@ -42,10 +60,29 @@ export const loginHandler = async (
 
     const result = await authService.login(request.body, userAgent, ipAddress);
 
+    request.log.info({ userId: result.user.id }, 'Login successful, setting cookies');
+
+    // Set cookies
+    reply.setCookie('munshi_access_token', result.accessToken, {
+        path: '/',
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production', // Allow insecure cookies in development
+        sameSite: 'lax',
+        maxAge: 15 * 60, // 15 minutes
+    });
+
+    reply.setCookie('munshi_refresh_token', result.refreshToken, {
+        path: '/',
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production', // Allow insecure cookies in development
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
     return successJson(reply, {
         statusCode: 200,
         message: 'Login successful',
-        data: result,
+        data: result.user,
     });
 };
 
@@ -60,16 +97,40 @@ export const refreshHandler = async (
     const userAgent = request.headers['user-agent'] ?? 'Unknown';
     const ipAddress = request.ip;
 
+    // Get refresh token from cookie if not in body
+    const refreshToken = request.body?.refreshToken || request.cookies['munshi_refresh_token'];
+
+    if (!refreshToken) {
+        throw new Error('Refresh token is required');
+    }
+
     const result = await authService.refresh(
-        request.body.refreshToken,
+        refreshToken,
         userAgent,
         ipAddress
     );
 
+    // Set cookies
+    reply.setCookie('munshi_access_token', result.accessToken, {
+        path: '/',
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production', // Allow insecure cookies in development
+        sameSite: 'lax',
+        maxAge: 15 * 60, // 15 minutes
+    });
+
+    reply.setCookie('munshi_refresh_token', result.refreshToken, {
+        path: '/',
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production', // Allow insecure cookies in development
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60, // 7 days
+    });
+
     return successJson(reply, {
         statusCode: 200,
         message: 'Token refreshed successfully',
-        data: result,
+        data: result.user,
     });
 };
 
@@ -81,7 +142,15 @@ export const logoutHandler = async (
     request: FastifyRequest<{ Body: RefreshTokenInput }>,
     reply: FastifyReply
 ): Promise<FastifyReply> => {
-    await authService.logout(request.body.refreshToken);
+    const refreshToken = request.body?.refreshToken || request.cookies['munshi_refresh_token'];
+
+    if (refreshToken) {
+        await authService.logout(refreshToken);
+    }
+
+    // Clear cookies
+    reply.clearCookie('munshi_access_token', { path: '/' });
+    reply.clearCookie('munshi_refresh_token', { path: '/' });
 
     return successJson(reply, {
         statusCode: 200,

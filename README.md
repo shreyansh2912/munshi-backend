@@ -10,7 +10,7 @@ A fully production-ready backend architecture for the Munshi accounting system b
 - **Language**: TypeScript (strict mode)
 - **Web Framework**: Fastify (high performance)
 - **Databases**:
-  - MySQL (Prisma ORM) - Transactional & ledger data
+  - MySQL (Drizzle ORM) - Transactional & ledger data
   - MongoDB (Mongoose) - Documents, logs, AI tasks
   - Redis - Caching & sessions
 - **Task Queue**: BullMQ
@@ -27,7 +27,7 @@ munshi/
 ├── src/
 │   ├── config/           # Configuration (env, logger, security)
 │   ├── db/
-│   │   ├── mysql/        # Prisma client & transactions
+│   │   ├── mysql/        # Drizzle client & transactions
 │   │   └── mongo/        # Mongoose client & models
 │   ├── helpers/          # Response & error helpers
 │   ├── middlewares/      # Auth, RBAC, rate limiting, validation
@@ -40,8 +40,7 @@ munshi/
 │   ├── utils/            # Utilities (crypto, redis, validation)
 │   ├── app.ts            # Fastify app setup
 │   └── server.ts         # Server entry point
-├── prisma/
-│   └── schema.prisma     # Prisma schema for MySQL
+├── drizzle/              # Drizzle migrations
 ├── docker-compose.yml    # Docker services configuration
 ├── Dockerfile            # Multi-stage production build
 └── package.json
@@ -68,14 +67,14 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-3. **Generate Prisma client**:
+3. **Generate Drizzle artifacts**:
 ```bash
-npm run prisma:generate
+npm run db:generate
 ```
 
 4. **Run database migrations**:
 ```bash
-npm run prisma:migrate
+npm run db:migrate
 ```
 
 5. **Start development server**:
@@ -94,7 +93,7 @@ docker-compose up -d
 
 2. **Run migrations inside container**:
 ```bash
-docker-compose exec app npx prisma migrate deploy
+docker-compose exec app npm run db:migrate
 ```
 
 3. **View logs**:
@@ -157,7 +156,7 @@ See `.env.example` for complete list.
 4. **Input Validation & Sanitization**:
    - Zod schema validation
    - XSS protection via input sanitization
-   - SQL injection protection (Prisma prepared statements)
+   - SQL injection protection (Drizzle prepared statements)
    - NoSQL injection protection (Mongoose sanitization)
 
 5. **Security Headers**:
@@ -213,7 +212,7 @@ http://localhost:3000/api/v1
 
 ## 🗄️ Database Schemas
 
-### MySQL (Prisma)
+### MySQL (Drizzle)
 
 - **User**: User accounts with roles and MFA support
 - **RefreshToken**: JWT refresh tokens
@@ -257,9 +256,9 @@ npm run lint         # Run ESLint
 npm run lint:fix     # Fix linting issues
 npm run format       # Format code with Prettier
 npm run type-check   # TypeScript type checking
-npm run prisma:generate  # Generate Prisma client
-npm run prisma:migrate   # Run database migrations
-npm run prisma:studio    # Open Prisma Studio
+npm run db:generate    # Generate Drizzle artifacts
+npm run db:migrate     # Run database migrations
+npm run db:studio      # Open Drizzle Studio
 ```
 
 ### Docker Commands

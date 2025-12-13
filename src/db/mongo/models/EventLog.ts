@@ -56,7 +56,6 @@ const eventLogSchema = new Schema<IEventLog>(
         createdAt: {
             type: Date,
             default: Date.now,
-            index: true,
         },
     },
     {

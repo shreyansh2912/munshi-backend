@@ -3,11 +3,12 @@
  * Configures Fastify with plugins, middleware, and routes
  */
 
-import Fastify from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
+import cookie from '@fastify/cookie';
 
 import { redis } from '@utils/redis.js';
 
@@ -20,6 +21,7 @@ import { authRoutes } from '@modules/auth/auth.routes.js';
 import { userRoutes } from '@modules/user/user.routes.js';
 import { ledgerRoutes } from '@modules/ledger/ledger.routes.js';
 
+
 /**
  * Create and configure Fastify app
  */
@@ -31,8 +33,13 @@ export const createApp = async () => {
     });
 
     // Register plugins
+    await app.register(cookie, {
+        secret: env.JWT_ACCESS_SECRET, // Use JWT secret for cookie signing
+        hook: 'onRequest',
+        parseOptions: {}
+    });
     await app.register(helmet, helmetConfig);
-    await app.register(cors, corsConfig);
+    await app.register(cors, corsConfig as any);
     await app.register(multipart, {
         limits: {
             fileSize: env.MAX_FILE_SIZE,
@@ -78,7 +85,7 @@ export const createApp = async () => {
     await app.register(organizationsRoutes, { prefix: `/api/${env.API_VERSION}/organizations` });
 
     // 404 handler
-    app.setNotFoundHandler((request, reply) => {
+    app.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) => {
         reply.status(404).send({
             success: false,
             statusCode: 404,

@@ -74,6 +74,7 @@ export const createRefreshToken = async (data: RefreshTokenCreateInput) => {
         userId: data.userId,
         deviceFingerprint: data.deviceFingerprint,
         expiresAt: data.expiresAt,
+        createdAt: new Date(),
     });
 
     return db.select().from(refreshTokens).where(eq(refreshTokens.id, tokenId)).then(rows => rows[0]);
@@ -109,6 +110,21 @@ export const deleteRefreshToken = async (token: string): Promise<void> => {
  */
 export const deleteUserRefreshTokens = async (userId: string): Promise<void> => {
     await db.delete(refreshTokens).where(eq(refreshTokens.userId, userId));
+};
+
+/**
+ * Delete refresh token for a specific user-device combination
+ */
+export const deleteUserDeviceRefreshToken = async (
+    userId: string,
+    deviceFingerprint: string
+): Promise<void> => {
+    await db.delete(refreshTokens).where(
+        and(
+            eq(refreshTokens.userId, userId),
+            eq(refreshTokens.deviceFingerprint, deviceFingerprint)
+        )
+    );
 };
 
 /**

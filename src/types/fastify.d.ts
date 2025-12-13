@@ -3,13 +3,12 @@
  * Extends Fastify types with custom properties
  */
 
-import { User } from '@prisma/client';
-import { Prisma } from '@prisma/client';
+import type { User } from '../modules/user/user.repository.js';
 
 declare module 'fastify' {
     interface FastifyRequest {
         user?: User;
-        transaction?: Prisma.TransactionClient;
-        deviceFingerprint?: string;
+        // transaction?: Prisma.TransactionClient; // TODO: Add Drizzle transaction type if needed
+        deviceFingerprint: string;
     }
 }

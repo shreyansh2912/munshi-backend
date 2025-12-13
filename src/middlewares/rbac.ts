@@ -4,7 +4,11 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { UserRole } from '../types/prisma.js';
+export enum UserRole {
+    USER = 'USER',
+    ADMIN = 'ADMIN',
+    ENTERPRISE_MEMBER = 'ENTERPRISE_MEMBER',
+}
 
 import { AuthorizationError } from '@helpers/errors.js';
 import { logger } from '@config/logger.js';
@@ -30,7 +34,7 @@ export const requireRole = (allowedRoles: UserRole[]) => {
         }
 
         // Check if user has required role
-        if (!allowedRoles.includes(request.user.role)) {
+        if (!request.user.role || !allowedRoles.includes(request.user.role as UserRole)) {
             logger.warn(
                 {
                     userId: request.user.id,

@@ -7,6 +7,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import * as userService from './user.service.js';
 import { successJson } from '@helpers/response.js';
 import type { UpdateProfileInput } from './user.validation.js';
+import { log } from 'console';
 
 /**
  * Get current user profile
@@ -21,7 +22,8 @@ export const getProfileHandler = async (
     }
 
     const user = await userService.getProfile(request.user.id);
-
+    console.log(user);
+    
     return successJson(reply, {
         statusCode: 200,
         message: 'Profile retrieved successfully',

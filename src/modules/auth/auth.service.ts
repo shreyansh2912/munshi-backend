@@ -3,7 +3,10 @@
  * Business logic for authentication
  */
 
-import { User } from '@prisma/client';
+import type { InferSelectModel } from 'drizzle-orm';
+import { users } from '@db/schema';
+
+type User = InferSelectModel<typeof users>;
 
 import {
     hashPassword,
@@ -20,6 +23,7 @@ import {
     findRefreshToken,
     deleteRefreshToken,
     deleteUserRefreshTokens,
+    deleteUserDeviceRefreshToken,
     upsertDeviceFingerprint,
     cleanupOldDeviceFingerprints,
 } from './auth.repository.js';
@@ -67,6 +71,10 @@ export const register = async (
         lastName: data.lastName,
     });
 
+    if (!user) {
+        throw new Error('Failed to create user');
+    }
+
     logger.info({ userId: user.id, email: user.email }, 'User registered');
 
     // Generate device fingerprint
@@ -90,13 +98,16 @@ export const register = async (
         deviceFingerprint,
     });
 
+    // Delete any existing refresh token for this user-device combination
+    await deleteUserDeviceRefreshToken(user.id, deviceFingerprint);
+
     // Store refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
     await createRefreshToken({
         token: refreshToken,
-        user: { connect: { id: user.id } },
+        userId: user.id,
         deviceFingerprint,
         expiresAt,
     });
@@ -162,13 +173,16 @@ export const login = async (
         deviceFingerprint,
     });
 
+    // Delete any existing refresh token for this user-device combination
+    await deleteUserDeviceRefreshToken(user.id, deviceFingerprint);
+
     // Store refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     await createRefreshToken({
         token: refreshToken,
-        user: { connect: { id: user.id } },
+        userId: user.id,
         deviceFingerprint,
         expiresAt,
     });
@@ -253,7 +267,7 @@ export const refresh = async (
 
     await createRefreshToken({
         token: newRefreshToken,
-        user: { connect: { id: user.id } },
+        userId: user.id,
         deviceFingerprint,
         expiresAt,
     });

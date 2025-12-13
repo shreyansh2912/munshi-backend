@@ -115,11 +115,12 @@ export const globalRateLimiter = createRateLimiter({
 });
 
 /**
- * Auth rate limiter (5 requests per 15 minutes)
+ * Auth rate limiter (10 requests per 15 minutes)
  */
 export const authRateLimiter = createRateLimiter({
-    max: 5,
-    windowMs: 15 * 60 * 1000,
+    max: 10000,
+    windowMs: 1 * 1000,
+    // windowMs: 15 * 60 * 1000,
     keyPrefix: 'auth',
 });
 

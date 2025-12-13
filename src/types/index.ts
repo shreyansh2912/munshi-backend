@@ -113,7 +113,7 @@ export interface UpdateProfileRequest {
     phone?: string;
 }
 
-export type UserRole = 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+export type UserRole = 'USER' | 'ADMIN' | 'ENTERPRISE_MEMBER';
 
 // ============================================================================
 // Organization Types
@@ -439,7 +439,8 @@ export interface UpdateLedgerRequest {
     isActive?: boolean;
 }
 
-export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
+export const ACCOUNT_TYPES = ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'] as const;
+export type AccountType = typeof ACCOUNT_TYPES[number];
 
 export interface JournalEntry {
     id: number;

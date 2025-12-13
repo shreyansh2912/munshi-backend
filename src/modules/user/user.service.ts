@@ -2,7 +2,7 @@
  * User Module - Service
  */
 
-import { User } from '@prisma/client';
+import type { User } from './user.repository.js';
 
 import * as userRepo from './user.repository.js';
 import { NotFoundError } from '@helpers/errors.js';

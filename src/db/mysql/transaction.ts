@@ -1,13 +1,21 @@
 /**
  * Database Transaction Wrapper
- * Utility for handling Prisma transactions
+ * Utility for handling Drizzle transactions
  */
 
-import { Prisma } from '@prisma/client';
-
-import { prisma } from './client.js';
+import { db } from './client.js';
 import { DatabaseError } from '@helpers/errors.js';
 import { logger } from '@config/logger.js';
+import { ExtractTablesWithRelations } from 'drizzle-orm';
+import { MySqlTransaction } from 'drizzle-orm/mysql2';
+import { MySql2QueryResultHKT } from 'drizzle-orm/mysql2';
+import * as schema from '../schema/index.js';
+
+type TransactionClient = MySqlTransaction<
+    MySql2QueryResultHKT,
+    typeof schema,
+    ExtractTablesWithRelations<typeof schema>
+>;
 
 /**
  * Execute a function within a database transaction
@@ -16,21 +24,12 @@ import { logger } from '@config/logger.js';
  * @param callback - Function to execute within transaction
  * @returns Result of the callback
  * @throws DatabaseError if transaction fails
- *
- * @example
- * ```ts
- * const result = await withTransaction(async (tx) => {
- *   const user = await tx.user.create({ data: userData });
- *   const ledger = await tx.ledger.create({ data: ledgerData });
- *   return { user, ledger };
- * });
- * ```
  */
 export const withTransaction = async <T>(
-    callback: (tx: Prisma.TransactionClient) => Promise<T>
+    callback: (tx: TransactionClient) => Promise<T>
 ): Promise<T> => {
     try {
-        return await prisma.$transaction(async (tx) => {
+        return await db.transaction(async (tx) => {
             return await callback(tx);
         });
     } catch (error) {

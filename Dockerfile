@@ -12,11 +12,8 @@ COPY tsconfig.json ./
 RUN npm ci
 
 # Copy source code
+# Copy source code
 COPY src ./src
-COPY prisma ./prisma
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Build TypeScript
 RUN npm run build
@@ -41,10 +38,6 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-# Copy Prisma schema for migrations
-COPY prisma ./prisma
 
 # Change ownership to non-root user
 RUN chown -R nodejs:nodejs /app

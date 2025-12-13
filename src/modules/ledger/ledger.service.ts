@@ -2,7 +2,7 @@
  * Ledger Module - Service
  */
 
-import { Ledger } from '@prisma/client';
+import type { Ledger } from './ledger.repository.js';
 
 import * as ledgerRepo from './ledger.repository.js';
 import { ConflictError, NotFoundError } from '@helpers/errors.js';
@@ -31,8 +31,8 @@ export const createLedger = async (
 
     return ledgerRepo.createLedger({
         ...data,
-        user: { connect: { id: userId } },
-        ...(data.parentId && { parent: { connect: { id: data.parentId } } }),
+        userId,
+        // parentId is already in data if provided
     });
 };
 
