@@ -58,6 +58,17 @@ const envSchema = z.object({
     // BullMQ
     BULL_REDIS_HOST: z.string().default('localhost'),
     BULL_REDIS_PORT: z.string().transform(Number).pipe(z.number()).default('6379'),
+
+    // Storage
+    STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
+    APP_URL: z.string().default('http://localhost:3000'),
+
+    // AWS S3 (optional, required if using S3)
+    AWS_ACCESS_KEY_ID: z.string().optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    AWS_BUCKET: z.string().optional(),
+    AWS_REGION: z.string().default('us-east-1'),
+    AWS_URL: z.string().optional(),
 });
 
 /**

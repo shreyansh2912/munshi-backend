@@ -26,3 +26,6 @@ export * from './operations';
 
 // Materialized views (5 tables)
 export * from './reports';
+
+// Files (1 table)
+export * from './files';

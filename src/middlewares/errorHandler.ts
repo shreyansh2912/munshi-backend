@@ -5,7 +5,7 @@
 
 import { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 
-import { AppError, isOperationalError } from '@helpers/errors.js';
+import { AppError, ValidationError, isOperationalError } from '@helpers/errors.js';
 import { errorJson } from '@helpers/response.js';
 import { logger } from '@config/logger.js';
 import { env } from '@config/env.js';
@@ -30,23 +30,36 @@ export const errorHandler = (
         'Error occurred'
     );
 
-    // Handle AppError instances
+    // Handle AppError instances (including ValidationError)
     if (error instanceof AppError) {
+        // Always include details for ValidationError, regardless of environment
+        const shouldIncludeDetails =
+            error instanceof ValidationError ||
+            env.NODE_ENV === 'development';
+
         return errorJson(reply, {
             statusCode: error.statusCode,
             message: error.message,
             errorCode: error.errorCode,
-            details: env.NODE_ENV === 'development' ? error.details : undefined,
+            details: shouldIncludeDetails ? error.details : undefined,
         });
     }
 
-    // Handle Fastify validation errors
+    // Handle Fastify validation errors (JSON schema errors)
     if ('validation' in error && error.validation) {
+        // Format Fastify validation errors to match our format
+        const formattedErrors = Array.isArray(error.validation)
+            ? error.validation.map((err: any) => ({
+                field: err.instancePath?.replace(/^\//, '').replace(/\//g, '.') || err.params?.missingProperty || 'unknown',
+                message: err.message || 'Validation failed',
+            }))
+            : [];
+
         return errorJson(reply, {
             statusCode: 400,
             message: 'Validation failed',
             errorCode: 'VALIDATION_ERROR',
-            details: env.NODE_ENV === 'development' ? error.validation : undefined,
+            details: { errors: formattedErrors },
         });
     }
 

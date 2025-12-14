@@ -44,6 +44,10 @@ export const getCurrentOrganizationHandler = async (
         throw new Error('User not authenticated');
     }
 
+    if (!request.user.orgId) {
+        throw new Error('User does not have an organization assigned');
+    }
+
     const organization = await organizationService.getCurrentOrganization(request.user.orgId);
 
     return successJson(reply, {

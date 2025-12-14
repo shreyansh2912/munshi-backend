@@ -8,7 +8,7 @@ import { organizations, memberships } from '@db/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { CreateOrganizationInput, UpdateOrganizationInput } from './organizations.validation.js';
-import { NotFoundError, ForbiddenError } from '@helpers/errors.js';
+import { NotFoundError, AuthorizationError } from '@helpers/errors.js';
 
 /**
  * Create a new organization
@@ -99,7 +99,7 @@ export const updateOrganization = async (id: number, userId: string, data: Updat
     });
 
     if (!membership) {
-        throw new ForbiddenError('Access denied to this organization');
+        throw new AuthorizationError('Access denied to this organization');
     }
 
     await db
@@ -137,7 +137,7 @@ export const switchOrganization = async (userId: string, orgId: number) => {
     const hasAccess = await verifyOrganizationAccess(userId, orgId);
 
     if (!hasAccess) {
-        throw new ForbiddenError('Access denied to this organization');
+        throw new AuthorizationError('Access denied to this organization');
     }
 
     return getOrganization(orgId);

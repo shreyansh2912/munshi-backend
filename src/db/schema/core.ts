@@ -34,11 +34,13 @@ export const users = mysqlTable(
         isActive: boolean('is_active').default(true),
         isMfaEnabled: boolean('is_mfa_enabled').default(false),
         emailVerified: boolean('email_verified').default(false),
+        currentOrgId: bigint('current_org_id', { mode: 'number' }), // Currently active organization
         createdAt: datetime('created_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
         updatedAt: datetime('updated_at', { mode: 'date', fsp: 6 }).notNull().$defaultFn(() => new Date()),
     },
     (table) => ({
         emailIdx: index('idx_email').on(table.email),
+        currentOrgIdIdx: index('idx_current_org_id').on(table.currentOrgId),
     })
 );
 

@@ -124,7 +124,8 @@ export const authenticate = async (
         }
 
         // Attach user and device fingerprint to request
-        request.user = user;
+        // Map currentOrgId to orgId for backwards compatibility
+        request.user = { ...user, orgId: user.currentOrgId };
         request.deviceFingerprint = deviceFingerprint;
 
         logger.debug({ userId: user.id, email: user.email }, 'User authenticated');
@@ -181,7 +182,8 @@ export const optionalAuthenticate = async (
         const user = result[0] || null;
 
         if (user && user.isActive) {
-            request.user = user;
+            // Map currentOrgId to orgId for backwards compatibility
+            request.user = { ...user, orgId: user.currentOrgId };
         }
     } catch (error) {
         // Silently fail for optional authentication

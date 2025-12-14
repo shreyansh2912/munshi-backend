@@ -66,6 +66,9 @@
             ],
             "@queue/*": [
                 "./src/queue/*"
+            ],
+            "@storage/*": [
+                "./src/storage/*"
             ]
         }
     },
