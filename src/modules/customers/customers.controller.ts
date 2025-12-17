@@ -16,8 +16,8 @@ export const createCustomerHandler = async (
     request: FastifyRequest<{ Body: CreateCustomerInput }>,
     reply: FastifyReply
 ): Promise<FastifyReply> => {
-    if (!request.user) {
-        throw new Error('User not authenticated');
+    if (!request.user || !request.user.orgId) {
+        throw new Error('User not authenticated or missing organization');
     }
 
     const customer = await customerService.createCustomer(request.user.orgId, request.body);

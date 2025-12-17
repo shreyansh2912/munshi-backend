@@ -75,10 +75,10 @@ export const errorHandler = (
     // Handle unexpected errors
     const isOperational = isOperationalError(error);
 
-    // In production, hide internal error details
+    // In production, hide internal error details (SQL queries, stack traces, etc.)
     const message =
         env.NODE_ENV === 'production' && !isOperational
-            ? 'An unexpected error occurred'
+            ? 'Internal server error'
             : error.message;
 
     return errorJson(reply, {

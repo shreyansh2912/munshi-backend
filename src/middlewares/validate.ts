@@ -6,7 +6,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z, ZodSchema } from 'zod';
 
-import { ValidationError } from '@helpers/errors.js';
 import { sanitizeObject } from '@utils/validation.js';
 
 /**
@@ -35,7 +34,7 @@ interface ValidationSchemas {
  * ```
  */
 export const validate = (schemas: ValidationSchemas) => {
-    return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
+    return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
         try {
             // Validate and sanitize body
             if (schemas.body) {
@@ -54,15 +53,25 @@ export const validate = (schemas: ValidationSchemas) => {
             }
         } catch (error) {
             if (error instanceof z.ZodError) {
-                // Format Zod errors
-                const errors = error.errors.map((err) => ({
-                    field: err.path.join('.'),
-                    message: err.message,
-                }));
+                // Convert Zod errors to object format: { fieldName: "error message" }
+                const errors: Record<string, string> = {};
+                error.errors.forEach((err) => {
+                    const fieldName = err.path.join('.');
+                    errors[fieldName] = err.message;
+                });
 
-                throw new ValidationError('Validation failed', { errors });
+                // Send error response directly - this bypasses Fastify's default error serialization
+                return reply.status(400).send({
+                    success: false,
+                    statusCode: 400,
+                    message: 'Validation failed',
+                    errorCode: 'VALIDATION_ERROR',
+                    errors,
+                    timestamp: new Date().toISOString(),
+                });
             }
 
+            // Re-throw non-validation errors
             throw error;
         }
     };
