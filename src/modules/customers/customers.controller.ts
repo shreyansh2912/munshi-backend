@@ -1,6 +1,6 @@
 /**
  * Customers Module - Controller
- * Handles customer CRUD operations
+ * Handles customer CRUD operations with pagination support
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -51,23 +51,38 @@ export const getCustomerHandler = async (
 };
 
 /**
- * List all customers
- * GET /customers
+ * List all customers with pagination
+ * GET /customers?page=1&limit=20&search=acme&isActive=true
  */
 export const listCustomersHandler = async (
-    request: FastifyRequest,
+    request: FastifyRequest<{
+        Querystring: {
+            page?: string;
+            limit?: string;
+            search?: string;
+            isActive?: string;
+        }
+    }>,
     reply: FastifyReply
 ): Promise<FastifyReply> => {
     if (!request.user) {
         throw new Error('User not authenticated');
     }
 
-    const customers = await customerService.listCustomers(request.user.orgId);
+    const { page, limit, search, isActive } = request.query;
+
+    const result = await customerService.listCustomers(request.user.orgId, {
+        page: page ? parseInt(page) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+        search,
+        isActive: isActive ? isActive === 'true' : undefined,
+    });
 
     return successJson(reply, {
         statusCode: 200,
         message: 'Customers retrieved successfully',
-        data: customers,
+        data: result.data,
+        pagination: result.pagination,
     });
 };
 
