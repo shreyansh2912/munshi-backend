@@ -1,6 +1,6 @@
 /**
  * Products Module - Controller
- * Handles product CRUD operations and related endpoints
+ * Handles product CRUD operations with pagination support
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -8,10 +8,6 @@ import * as productService from './products.service.js';
 import { successJson } from '@helpers/response.js';
 import type { CreateProductInput, UpdateProductInput } from './products.validation.js';
 
-/**
- * Create product
- * POST /products
- */
 export const createProductHandler = async (
     request: FastifyRequest<{ Body: CreateProductInput }>,
     reply: FastifyReply
@@ -29,10 +25,6 @@ export const createProductHandler = async (
     });
 };
 
-/**
- * Get product
- * GET /products/:id
- */
 export const getProductHandler = async (
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
@@ -50,31 +42,42 @@ export const getProductHandler = async (
     });
 };
 
-/**
- * List all products
- * GET /products
- */
 export const listProductsHandler = async (
-    request: FastifyRequest,
+    request: FastifyRequest<{
+        Querystring: {
+            page?: string;
+            limit?: string;
+            search?: string;
+            categoryId?: string;
+            lowStock?: string;
+            isActive?: string;
+        };
+    }>,
     reply: FastifyReply
 ): Promise<FastifyReply> => {
     if (!request.user) {
         throw new Error('User not authenticated');
     }
 
-    const products = await productService.listProducts(request.user.orgId);
+    const { page, limit, search, categoryId, lowStock, isActive } = request.query;
+
+    const result = await productService.listProducts(request.user.orgId, {
+        page: page ? parseInt(page) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+        search,
+        categoryId: categoryId ? parseInt(categoryId) : undefined,
+        lowStock: lowStock === 'true',
+        isActive: isActive ? isActive === 'true' : undefined,
+    });
 
     return successJson(reply, {
         statusCode: 200,
         message: 'Products retrieved successfully',
-        data: products,
+        data: result.data,
+        pagination: result.pagination,
     });
 };
 
-/**
- * Update product
- * PATCH /products/:id
- */
 export const updateProductHandler = async (
     request: FastifyRequest<{ Params: { id: string }; Body: UpdateProductInput }>,
     reply: FastifyReply
@@ -96,10 +99,6 @@ export const updateProductHandler = async (
     });
 };
 
-/**
- * Delete product
- * DELETE /products/:id
- */
 export const deleteProductHandler = async (
     request: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply
@@ -116,10 +115,6 @@ export const deleteProductHandler = async (
     });
 };
 
-/**
- * List product categories
- * GET /products/categories
- */
 export const listCategoriesHandler = async (
     request: FastifyRequest,
     reply: FastifyReply
@@ -137,10 +132,6 @@ export const listCategoriesHandler = async (
     });
 };
 
-/**
- * List units
- * GET /products/units
- */
 export const listUnitsHandler = async (
     request: FastifyRequest,
     reply: FastifyReply

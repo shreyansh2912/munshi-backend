@@ -1,5 +1,6 @@
 /**
  * Invoices Module - Controller
+ * Handles invoice CRUD operations with pagination support
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -42,19 +43,40 @@ export const getInvoiceHandler = async (
 };
 
 export const listInvoicesHandler = async (
-    request: FastifyRequest,
+    request: FastifyRequest<{
+        Querystring: {
+            page?: string;
+            limit?: string;
+            search?: string;
+            status?: string;
+            customerId?: string;
+            dateFrom?: string;
+            dateTo?: string;
+        };
+    }>,
     reply: FastifyReply
 ): Promise<FastifyReply> => {
     if (!request.user) {
         throw new Error('User not authenticated');
     }
 
-    const invoices = await invoiceService.listInvoices(request.user.orgId);
+    const { page, limit, search, status, customerId, dateFrom, dateTo } = request.query;
+
+    const result = await invoiceService.listInvoices(request.user.orgId, {
+        page: page ? parseInt(page) : undefined,
+        limit: limit ? parseInt(limit) : undefined,
+        search,
+        status,
+        customerId: customerId ? parseInt(customerId) : undefined,
+        dateFrom,
+        dateTo,
+    });
 
     return successJson(reply, {
         statusCode: 200,
         message: 'Invoices retrieved successfully',
-        data: invoices,
+        data: result.data,
+        pagination: result.pagination,
     });
 };
 
