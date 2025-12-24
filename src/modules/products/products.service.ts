@@ -15,7 +15,7 @@ import { products, productCategories, units } from '@db/schema';
 import { eq, and, or, isNull, desc, asc, like, sql, lte } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type { CreateProductInput, UpdateProductInput } from './products.validation.js';
-import { NotFoundError, AlreadyExistsError, Business LogicError } from '@utils/errors.js';
+import { NotFoundError, AlreadyExistsError, BusinessLogicError } from '@utils/errors.js';
 import {
     parsePaginationParams,
     buildPaginatedResponse,
@@ -91,6 +91,10 @@ export const createProduct = async (orgId: number, data: CreateProductInput) => 
         })
         .$returningId();
 
+    if (!product) {
+        throw new Error('Failed to create product');
+    }
+
     return getProduct(product.id.toString(), orgId);
 };
 
@@ -162,11 +166,12 @@ export const listProducts = async (
         conditions.push(eq(products.categoryId, params.categoryId));
     }
 
-    // Add low stock filter
+    // TODO: Add low stock filter using stockSummary table
+    // The products table doesn't have stockQuantity or minStockLevel fields
+    // Stock is tracked in the stockSummary table via productVariants
     if (params.lowStock) {
-        conditions.push(
-            sql`${products.stockQuantity} <= ${products.minStockLevel}`
-        );
+        // For now, we'll skip this filter until proper implementation
+        console.warn('Low stock filtering is not yet implemented');
     }
 
     // Add active filter
@@ -175,10 +180,12 @@ export const listProducts = async (
     }
 
     // Get total count
-    const [{ count }] = await db
+    const result = await db
         .select({ count: sql<number>`count(*)` })
         .from(products)
         .where(and(...conditions));
+
+    const count = result[0]?.count ?? 0;
 
     // Get paginated data
     const data = await db
@@ -223,19 +230,14 @@ export const updateProduct = async (
         await validateSKU(orgId, data.sku, productId);
     }
 
-    const [updated] = await db
+    await db
         .update(products)
         .set(data)
         .where(and(
             eq(products.id, productId),
             eq(products.orgId, orgId),
             isNull(products.deletedAt)
-        ))
-        .$returningId();
-
-    if (!updated) {
-        throw new NotFoundError('Product', id);
-    }
+        ));
 
     return getProduct(id, orgId);
 };
@@ -253,19 +255,17 @@ export const updateProduct = async (
  * @throws {NotFoundError} If product not found
  */
 export const deleteProduct = async (id: string, orgId: number) => {
-    const [deleted] = await db
+    // Verify product exists before deleting
+    await getProduct(id, orgId);
+
+    await db
         .update(products)
         .set({ deletedAt: new Date() })
         .where(and(
             eq(products.id, parseInt(id)),
             eq(products.orgId, orgId),
             isNull(products.deletedAt)
-        ))
-        .$returningId();
-
-    if (!deleted) {
-        throw new NotFoundError('Product', id);
-    }
+        ));
 
     return true;
 };
@@ -311,14 +311,12 @@ export const listUnits = async (orgId: number) => {
  * @returns Products with stock below minimum level
  */
 export async function getLowStockProducts(orgId: number) {
-    return db.query.products.findMany({
-        where: and(
-            eq(products.orgId, orgId),
-            isNull(products.deletedAt),
-            sql`${products.stockQuantity} <= ${products.minStockLevel}`
-        ),
-        orderBy: (products, { asc }) => [asc(products.stockQuantity)],
-    });
+    // TODO: Implement proper low stock checking using stockSummary table
+    // The products table doesn't have stockQuantity or minStockLevel fields
+    // Need to join with stockSummary and check against a configurable threshold
+
+    console.warn('getLowStockProducts is not yet properly implemented');
+    return [];
 }
 
 /**
@@ -328,11 +326,10 @@ export async function getLowStockProducts(orgId: number) {
  * @returns Products with zero stock
  */
 export async function getOutOfStockProducts(orgId: number) {
-    return db.query.products.findMany({
-        where: and(
-            eq(products.orgId, orgId),
-            isNull(products.deletedAt),
-            eq(products.stockQuantity, 0)
-        ),
-    });
+    // TODO: Implement proper out-of-stock checking using stockSummary table
+    // The products table doesn't have stockQuantity field
+    // Need to join with stockSummary and check for zero available quantity
+
+    console.warn('getOutOfStockProducts is not yet properly implemented');
+    return [];
 }
