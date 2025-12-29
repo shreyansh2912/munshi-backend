@@ -86,6 +86,10 @@ export const createApp = async () => {
     await app.register(organizationsRoutes, { prefix: `/api/${env.API_VERSION}/organizations` });
     await app.register(filesRoutes, { prefix: `/api/${env.API_VERSION}/files` });
 
+    // Register dashboard routes
+    const { dashboardRoutes } = await import('@modules/dashboard/dashboard.routes.js');
+    await app.register(dashboardRoutes, { prefix: `/api/${env.API_VERSION}/dashboard` });
+
     // 404 handler
     app.setNotFoundHandler((request: FastifyRequest, reply: FastifyReply) => {
         reply.status(404).send({
